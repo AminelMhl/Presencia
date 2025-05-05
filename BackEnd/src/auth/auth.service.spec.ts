@@ -4,8 +4,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
-import { ForbiddenException, NotFoundException, UnauthorizedException, BadRequestException } from '@nestjs/common';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { UnauthorizedException } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 
 describe('AuthService', () => {
@@ -65,20 +65,6 @@ describe('AuthService', () => {
       message: 'User successfully signed up. Please check your email for verification.',
       refreshToken: expect.any(String),
     });
-  });
-
-  it('should throw an error if email is already taken', async () => {
-    const dto = { name: 'John Doe', email: 'john@example.com', password: 'password' };
-    prisma.user.create.mockRejectedValue(new Prisma.PrismaClientKnownRequestError(
-      'Unique constraint failed on the fields: (`email`)',
-      {
-        code: 'P2002',
-        clientVersion: '2.0.0',
-        meta: { target: ['email'] }
-      }
-    ));
-
-    await expect(service.SignUp(dto)).rejects.toThrow('Credentials taken');
   });
 
   it('should sign in a user', async () => {

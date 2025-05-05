@@ -1,8 +1,7 @@
-import { Controller, Get, Post, Body, Req, UseGuards, Res, Put, Query, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, UseGuards, Query, Patch } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthdtoSignIn, AuthdtoSignUp, AuthdtoChangePass } from './dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiExcludeEndpoint } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -27,28 +26,6 @@ export class AuthController {
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   async signIn(@Body() dto: AuthdtoSignIn) {
     return this.authService.SignIn(dto);
-  }
-
-  @Get('google')
-  @ApiExcludeEndpoint()
-  @UseGuards(AuthGuard('google'))
-  @ApiOperation({ summary: 'Google OAuth login' })
-  @ApiResponse({ status: 302, description: 'Redirect to Google OAuth' })
-  async googleAuth(@Req() req) { }
-
-  @Get('google/callback')
-  @ApiExcludeEndpoint()
-  @UseGuards(AuthGuard('google'))
-  @ApiOperation({ summary: 'Google OAuth callback' })
-  @ApiResponse({ status: 200, description: 'User authenticated' })
-  async googleAuthRedirect(@Req() req) {
-    const { user } = req;
-    const accessToken = await this.authService.signToken(user.id, user.email, user.role)
-      return {
-      message: 'User authenticated successfully',
-      access_token: accessToken,
-      refresh_token: user.refreshToken,
-    };
   }
 
   @Patch('change-password')

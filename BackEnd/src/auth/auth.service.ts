@@ -1,4 +1,5 @@
 import { Injectable, ForbiddenException, NotFoundException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import * as zxcvbn from 'zxcvbn';
 import { AuthdtoChangePass, AuthdtoSignIn, AuthdtoSignUp } from './dto';
 import * as argon2 from 'argon2';
 import { v4 as uuidv4 } from 'uuid';
@@ -22,6 +23,12 @@ export class AuthService {
 
   async SignUp(dto: AuthdtoSignUp) {
     try {
+      const passwordStrength = zxcvbn(dto.password);
+      console.log('Password strength score:', passwordStrength.score);
+      if (passwordStrength.score < 3) { // Require a score of at least 3
+        throw new BadRequestException('Password is too weak. Please choose a stronger password.');
+      } 
+
       const hash = await argon2.hash(dto.password);
       const verificationToken = uuidv4(); // Generate a unique token
       const refreshToken = await this.jwtService.signAsync({ email: dto.email }, {
@@ -124,6 +131,13 @@ export class AuthService {
     const isSamePassword = await argon2.verify(user.hash, dto.newPassword);
     if (isSamePassword) {
       throw new ForbiddenException('New password cannot be the same as the old password');
+    }
+
+      // Check password strength for the new password
+    const passwordStrength = zxcvbn(dto.newPassword);
+    console.log('New password strength score:', passwordStrength.score);
+    if (passwordStrength.score < 3) { // Require a score of at least 3
+      throw new BadRequestException('New password is too weak. Please choose a stronger password.');
     }
 
     // Hash the new password and update it

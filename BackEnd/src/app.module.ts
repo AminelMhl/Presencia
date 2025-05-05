@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
@@ -12,7 +10,6 @@ import { PrismaModule } from './prisma/prisma.module';
   imports: [
     AuthModule,
     PrismaModule,
-    JwtStrategy,
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
@@ -22,7 +19,7 @@ import { PrismaModule } from './prisma/prisma.module';
       isGlobal: true,
     }),
   ],
-  controllers: [AppController],
-  providers: [AppService, JwtStrategy],
+  controllers: [],
+  providers: [JwtStrategy, JwtStrategy],
 })
 export class AppModule {}

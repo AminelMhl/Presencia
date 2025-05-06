@@ -1,13 +1,14 @@
 import { Injectable, ForbiddenException, NotFoundException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import * as zxcvbn from 'zxcvbn';
 import { AuthdtoChangePass, AuthdtoSignIn, AuthdtoSignUp } from './dto';
 import * as argon2 from 'argon2';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 
 @Injectable()
@@ -22,6 +23,12 @@ export class AuthService {
 
   async SignUp(dto: AuthdtoSignUp) {
     try {
+      const passwordStrength = zxcvbn(dto.password);
+      console.log('Password strength score:', passwordStrength.score);
+      if (passwordStrength.score < 3) { // Require a score of at least 3
+        throw new BadRequestException('Password is too weak. Please choose a stronger password.');
+      } 
+
       const hash = await argon2.hash(dto.password);
       const verificationToken = uuidv4(); // Generate a unique token
       const refreshToken = await this.jwtService.signAsync({ email: dto.email }, {
@@ -47,7 +54,7 @@ export class AuthService {
         refreshToken, // Optionally return the refresh token
       };
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
           throw new ForbiddenException('Credentials taken');
         }
@@ -126,6 +133,13 @@ export class AuthService {
       throw new ForbiddenException('New password cannot be the same as the old password');
     }
 
+      // Check password strength for the new password
+    const passwordStrength = zxcvbn(dto.newPassword);
+    console.log('New password strength score:', passwordStrength.score);
+    if (passwordStrength.score < 3) { // Require a score of at least 3
+      throw new BadRequestException('New password is too weak. Please choose a stronger password.');
+    }
+
     // Hash the new password and update it
     const newHash = await argon2.hash(dto.newPassword);
     await this.prisma.user.update({
@@ -140,17 +154,6 @@ export class AuthService {
     return "Password changed successfully!";
   }
 
-
-  async googleLogin(req) {
-    if (!req.user) {
-      return 'No user from Google';
-    }
-
-    return {
-      message: 'User information from Google',
-      user: req.user,
-    };
-  }
 
   async sendVerificationEmail(email: string, token: string) {
     // Create a transporter using SMTP
@@ -196,7 +199,7 @@ export class AuthService {
       payload = await this.jwtService.verifyAsync(refreshToken, {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
 

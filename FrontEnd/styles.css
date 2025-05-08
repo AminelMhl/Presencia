@@ -1,0 +1,287 @@
+/* RESET & BASE */
+/* SOLO LEVELING DARK SYSTEM THEME */
+/* Base & Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    background-color: #0a0a12;
+    background-image: 
+      radial-gradient(circle at 10% 20%, #1a1a2e15 0%, transparent 25%),
+      radial-gradient(circle at 90% 80%, #2e1a3a15 0%, transparent 25%);
+    color: #e0e0e0;
+    font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+  
+  /* Header - Monarch's Crown */
+  header {
+    padding: 1.5rem;
+    text-align: center;
+    background: linear-gradient(to bottom, #00000080, transparent);
+    position: relative;
+    z-index: 10;
+  }
+  
+  header::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 25%;
+    width: 50%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #7b2cbf, #4361ee, transparent);
+  }
+  
+  header h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 0 15px #7b2cbf, 0 0 25px #4361ee;
+    letter-spacing: 2px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .slogan {
+    font-style: italic;
+    color: #a5a5c7;
+    text-shadow: 0 0 8px #4361ee33;
+  }
+  
+  /* Navbar - Dungeon Gate */
+  .navbar {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #11111a;
+    border-top: 1px solid #7b2cbf44;
+    border-bottom: 1px solid #4361ee44;
+    position: relative;
+  }
+  
+  .navbar::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #7b2cbf, transparent);
+  }
+  
+  .nav-item {
+    color: #c0c0e0;
+    text-decoration: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .nav-item:hover {
+    background: #1e1e2e;
+    color: white;
+    box-shadow: 0 0 15px #4361ee55;
+  }
+  
+  .nav-item::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #7b2cbf, #4361ee);
+    transition: width 0.3s;
+  }
+  
+  .nav-item:hover::before {
+    width: 80%;
+  }
+  
+  /* Main Dashboard - System Interface */
+  .dashboard {
+    flex: 1;
+    display: flex;
+    padding: 2rem;
+    gap: 2rem;
+    position: relative;
+  }
+  
+  /* Camera Section - Gate Portal */
+  .camera-section {
+    flex: 1;
+    background: #11111a;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #7b2cbf33;
+    box-shadow: 
+      0 0 25px #7b2cbf22,
+      inset 0 0 20px #4361ee11;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .camera-section::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+      radial-gradient(circle, #7b2cbf10 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+    z-index: -1;
+  }
+  
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .camera-section h2 {
+    color: white;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 10px #4361ee;
+  }
+  
+  #camera {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    background: #1a1a2a;
+    border-radius: 8px;
+    border: 1px solid #4361ee66;
+    box-shadow: 
+      0 0 25px #4361ee33,
+      inset 0 0 15px #7b2cbf33;
+    margin-bottom: 1.5rem;
+  }
+  
+  .camera-section button {
+    background: linear-gradient(90deg, #7b2cbf, #4361ee);
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 4px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 0 15px #4361ee66;
+  }
+  
+  .camera-section button:hover {
+    box-shadow: 0 0 25px #4361ee, 0 0 35px #7b2cbf66;
+    transform: translateY(-3px);
+  }
+  
+  /* Attendance Section - Shadow Army List */
+  .attendance-section {
+    width: 350px;
+    background: #11111a;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #4361ee33;
+    box-shadow: 
+      0 0 25px #4361ee22,
+      inset 0 0 20px #7b2cbf11;
+    position: relative;
+  }
+  
+  .attendance-section::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, #7b2cbf, #4361ee, transparent);
+  }
+  
+  .attendance-section h2 {
+    color: white;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 10px #7b2cbf;
+  }
+  
+  #attendanceList {
+    list-style: none;
+  }
+  
+  #attendanceList li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1a1a2a;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 0.75rem;
+    border-radius: 4px;
+    transition: all 0.3s;
+    border-left: 3px solid transparent;
+  }
+  
+  #attendanceList li:hover {
+    background: #22223a;
+    border-left: 3px solid #4361ee;
+    transform: translateX(5px);
+  }
+  
+  .status {
+    font-weight: 700;
+  }
+  
+  .status.checked {
+    color: #4cc9f0;
+    text-shadow: 0 0 8px #4cc9f066;
+  }
+  
+  .status:not(.checked) {
+    color: #f72585;
+    text-shadow: 0 0 8px #f7258566;
+  }
+  
+  /* Footer - System Signature */
+  footer {
+    background: #0a0a12;
+    padding: 1rem;
+    text-align: center;
+    color: #a5a5c7;
+    border-top: 1px solid #7b2cbf33;
+    position: relative;
+  }
+  
+  footer::before {
+    content: "⌘";
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #4361ee;
+    text-shadow: 0 0 15px #7b2cbf;
+    font-size: 1.25rem;
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 900px) {
+    .dashboard {
+      flex-direction: column;
+    }
+    
+    .attendance-section {
+      width: 100%;
+    }
+  }

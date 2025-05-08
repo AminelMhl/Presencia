@@ -1,0 +1,48 @@
+<!-- dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Presencia - Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Presencia</h1>
+    <p class="slogan">Show your face, take your place</p>
+  </header>
+
+  <nav class="navbar">
+    <a href="#" class="nav-item">Home</a>
+    <a href="#" class="nav-item">Dashboard</a>
+    <a href="#" class="nav-item user-only">Profile</a>
+    <a href="#" class="nav-item admin-only">Admin Panel</a>
+    <a href="#" class="nav-item" onclick="logout()">Logout</a>
+  </nav>
+
+  <main class="dashboard">
+    <section class="camera-section">
+      <h2>Face Recognition</h2>
+      <video id="camera" autoplay></video>
+      <button onclick="simulateCheckIn()">Check-In</button>
+    </section>
+
+    <section class="attendance-section">
+      <h2>Today's Attendance</h2>
+      <ul id="attendanceList">
+        <li>Alice <span class="status checked">✓</span></li>
+        <li>Bob <span class="status">✗</span></li>
+        <li>Charlie <span class="status">✗</span></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Presencia. All rights reserved.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

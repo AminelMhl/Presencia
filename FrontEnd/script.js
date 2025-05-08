@@ -95,73 +95,7 @@ function setupRegisterPage() {
     });
 }
 
-// ====================== SOCIAL LOGIN ======================
-function loginWithGoogle() {
-    showSystemMessage('Initiating Google authentication...', 'success');
-    
-    // In a real app, you would use Firebase or Google OAuth here
-    setTimeout(() => {
-      // Simulate successful Google login
-      const googleUser = {
-        name: "Google User",
-        email: "googleuser@example.com",
-        isAdmin: false,
-        provider: "google"
-      };
-      
-      sessionStorage.setItem('currentUser', JSON.stringify(googleUser));
-      showSystemMessage('Google authentication successful!', 'success');
-      createPortalEffect('index.html');
-    }, 1500);
-  }
   
-  function loginWithFacebook() {
-    showSystemMessage('Initiating Facebook authentication...', 'success');
-    
-    // In a real app, you would use Facebook SDK here
-    setTimeout(() => {
-      // Simulate successful Facebook login
-      const facebookUser = {
-        name: "Facebook User",
-        email: "facebookuser@example.com",
-        isAdmin: false,
-        provider: "facebook"
-      };
-      
-      sessionStorage.setItem('currentUser', JSON.stringify(facebookUser));
-      showSystemMessage('Facebook authentication successful!', 'success');
-      createPortalEffect('index.html');
-    }, 1500);
-  }
-  
-  // Update the checkAuth function to handle social logins
-  function checkAuth() {
-    const currentUser = sessionStorage.getItem('currentUser');
-    
-    if (!currentUser) {
-      showSystemMessage('Please login first', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 1500);
-      return;
-    }
-  
-    const user = JSON.parse(currentUser);
-    
-    // For demo purposes, we'll treat social logins as regular users
-    if (user.provider) {
-      user.isAdmin = false;
-      sessionStorage.setItem('currentUser', JSON.stringify(user));
-    }
-  
-    // Show admin elements if user is admin
-    const adminElements = document.querySelectorAll('.admin-only');
-    adminElements.forEach(el => {
-      el.style.display = user.isAdmin ? 'block' : 'none';
-    });
-  }
-
-
 // ====================== AUTHENTICATION ======================
 function authenticateUser(email, password) {
     const loginBtn = document.querySelector('#loginForm button');

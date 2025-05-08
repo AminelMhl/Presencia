@@ -10,6 +10,7 @@ async function bootstrap() {
     .setTitle('Presencia API')
     .setDescription('API documentation for Presencia')
     .setVersion('1.0')
+    .addBearerAuth() 
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api', app, documentFactory);

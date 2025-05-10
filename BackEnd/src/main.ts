@@ -13,10 +13,11 @@ async function bootstrap() {
     .setTitle('Presencia API')
     .setDescription('API documentation for Presencia')
     .setVersion('1.0')
+    .addBearerAuth() 
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api', app, documentFactory);
   
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3003);
 }
 bootstrap();

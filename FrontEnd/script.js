@@ -5,7 +5,7 @@ let userDatabase = JSON.parse(localStorage.getItem('userDatabase')) || [
         name: "Shadow Monarch",
         email: "admin@presencia.com",
         password: "admin123",
-        isAdmin: true
+        isAdmin: false //Changed from true to false to be able to test camera for non-admin users until the authentication flow is set in the frontend
     }
 ];
 
@@ -95,7 +95,6 @@ function setupRegisterPage() {
     });
 }
 
-  
 // ====================== AUTHENTICATION ======================
 function authenticateUser(email, password) {
     const loginBtn = document.querySelector('#loginForm button');
@@ -136,6 +135,7 @@ function authenticateUser(email, password) {
                 isAdmin: user.isAdmin,
                 lastLogin: new Date().toISOString()
             }));
+            sessionStorage.setItem('access_token', 'simulated_token'); // For demo purposes
 
             showSystemMessage(`Welcome back, ${user.name}`, 'success');
             createPortalEffect('index.html');
@@ -177,11 +177,157 @@ function setupDashboard() {
         logoutBtn.addEventListener('click', logout);
     }
 
-    // Setup camera simulation
-    const simulateBtn = document.querySelector('.camera-section button');
-    if (simulateBtn) {
-        simulateBtn.addEventListener('click', simulateCheckIn);
+    // Get current user
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+    
+    // Always setup camera (for testing)
+    setupCamera();
+    // Setup camera for non-admin users
+    if (!currentUser.isAdmin) {
+        setupCamera();
+    } else {
+        // Admin gets the simulation button
+        const simulateBtn = document.querySelector('.camera-section button');
+        if (simulateBtn) {
+            simulateBtn.addEventListener('click', simulateCheckIn);
+        }
     }
+
+    // Fetch and display users in the dashboard
+fetch('http://localhost:3000/face/users')
+    .then(res => {
+        console.log('Fetch response:', res);
+        return res.json();
+    })
+    .then(data => {
+        console.log(data);
+        const attendanceList = document.getElementById('attendanceList');
+        if (!attendanceList) return;
+
+        attendanceList.innerHTML = ''; // Clear any existing entries
+
+        data.forEach(user => {
+            const userItem = document.createElement('li');
+            userItem.setAttribute('data-user-id', user.id);  // Store user ID for easy reference
+
+            userItem.innerHTML = `
+                <span class="name">${user.name}</span>
+                <span class="status">✗</span> <!-- Initially marked as '✗' (not present) -->
+                <span class="time"></span> <!-- Empty time, will be filled after recognition -->
+                <span class="confidence"></span> <!-- Empty confidence, will be filled after recognition -->
+            `;
+
+            attendanceList.appendChild(userItem);
+        });
+    })
+    .catch(err => {
+        console.error("Failed to fetch users:", err);
+    });
+
+}
+
+// ====================== REAL-TIME FACE RECOGNITION ======================
+function setupCamera() {
+    console.log("Setting up camera...");
+    const cameraSection = document.querySelector('.camera-section');
+
+    if (!cameraSection) {
+        console.error("Camera section not found!");
+        return;
+    }
+    cameraSection.innerHTML = `
+        <h2>Face Recognition</h2>
+        <div class="video-container">
+            <video autoplay playsinline></video>
+            <canvas style="display:none;"></canvas>
+        </div>
+        <button id="startRecognition">Start Recognition</button>
+        <div class="recognition-result"></div>
+    `;
+
+    const video = cameraSection.querySelector('video');
+    const canvas = cameraSection.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
+    const resultDiv = cameraSection.querySelector('.recognition-result');
+    const startBtn = cameraSection.querySelector('#startRecognition');
+    
+    // Set canvas size
+    video.addEventListener('loadedmetadata', () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+    });
+    // Start camera
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            console.log("Camera access granted");
+            video.srcObject = stream;
+            video.onloadedmetadata = () => {
+                console.log(`Video ready: ${video.videoWidth}x${video.videoHeight}`);
+            };
+        })
+        .catch(err => {
+            console.error("Camera error:", err);
+            cameraSection.innerHTML += `
+                <p class="error">Camera Error: ${err.message}</p>
+                <p>Make sure you've granted camera permissions</p>
+            `;
+        });
+
+    let isRecognizing = false;
+    let interval;
+
+        startBtn.addEventListener('click', () => {
+        if (isRecognizing) {
+            clearInterval(interval);
+            startBtn.textContent = 'Start Recognition';
+            resultDiv.innerHTML = '';
+        } else {
+            startBtn.textContent = 'Stop Recognition';
+            resultDiv.innerHTML = '<div class="spinner">Processing...</div>';
+
+            interval = setInterval(async () => {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob(async (blob) => {
+                    const formData = new FormData();
+                    formData.append('image', blob, 'frame.jpg');
+                    
+                    try {
+                        const response = await fetch('http://localhost:3000/face/recognize', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const data = await response.json();
+                        if (data.success) {
+                            resultDiv.innerHTML = `
+                                <h3>✅ RECOGNIZED: ${data.user.name}</h3>
+                                <p>⏱️ Time: ${data.attendance.formattedDateTime}</p>
+                                <p>🔒 Confidence: ${Math.round(100 - data.confidence)}%</p>
+                            `;
+
+                            // Now, update the user's status in the attendance list
+                            const userItem = document.querySelector(`li[data-user-id="${data.user.id}"]`);
+                            if (userItem) {
+                                const statusSpan = userItem.querySelector('.status');
+                                const timeSpan = userItem.querySelector('.time');
+                                const confidenceSpan = userItem.querySelector('.confidence');
+
+                                // Update the status to '✓', time, and confidence
+                                statusSpan.textContent = '✓';  // Mark as present
+                                timeSpan.textContent = `⏱️ ${data.attendance.formattedDateTime}`;  // Display time
+                                confidenceSpan.textContent = `🔒 Confidence: ${Math.round(100 - data.confidence)}%`;  // Display confidence
+                            }
+                        } else {
+                            resultDiv.innerHTML = `<p class="error">❌ ${data.error || 'Recognition failed'}</p>`;
+                        }
+                    } catch (error) {
+                        resultDiv.innerHTML = `<p class="error">🚨 Error: ${error.message}</p>`;
+                    }
+                }, 'image/jpeg', 0.8);
+            }, 2000);
+        }
+        isRecognizing = !isRecognizing;
+    });
 }
 
 function simulateCheckIn() {
@@ -211,6 +357,7 @@ function simulateCheckIn() {
 
 function logout() {
     sessionStorage.removeItem('currentUser');
+    sessionStorage.removeItem('access_token');
     createPortalEffect('login.html');
 }
 
@@ -339,7 +486,3 @@ function showSystemMessage(message, type) {
         style.remove();
     }, 3000);
 }
-
-
-
-

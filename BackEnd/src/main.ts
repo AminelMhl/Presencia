@@ -5,6 +5,9 @@ import { DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableCors({
+    origin: ['http://localhost:5500', 'http://127.0.0.1:5500'], 
+  });
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Presencia API')

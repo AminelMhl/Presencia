@@ -29,6 +29,7 @@ model User {
   isVerified        Boolean    @default(false)
   verificationToken String?    @unique
   faceData          FaceData[]
+  attendances       Attendance[]
 }
 
 model FaceData {
@@ -40,4 +41,12 @@ model FaceData {
   User User @relation(fields: [userId], references: [id])
 
   @@map("face_data")
+}
+
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  date      DateTime @default(now())
+  status    String   @default("present")
+  user      User     @relation(fields: [userId], references: [id])
 }

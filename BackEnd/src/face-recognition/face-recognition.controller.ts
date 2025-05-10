@@ -1,8 +1,6 @@
-import { Controller, Post, Get, UseInterceptors, UploadedFile, UseGuards, Body } from '@nestjs/common';
+import { Controller, Post, Get, UseInterceptors, UploadedFile, Body } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FaceRecognitionService } from './face-recognition.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { CurrentUser } from './current-user.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('face')

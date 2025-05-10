@@ -172,7 +172,7 @@ export class AuthService {
       from: 'TunisFootball@gmail.com',
       to: email,
       subject: 'Email Verification',
-      text: `Please verify your email by clicking the link: http://localhost:3003/auth/verify?token=${token}`,
+      text: `Please verify your email by clicking the link: http://localhost:3000/auth/verify?token=${token}`,
       html: `<h1>Email Verification</h1><p>Please verify your email by clicking the link below:</p><a href="http://localhost:3003/auth/verify?token=${token}">Verify Email</a>`, // HTML body
     };
 

@@ -36,7 +36,7 @@ export class FaceRecognitionService {
   
     try {
       // Send to Flask /register
-      const response = await this.http.axiosRef.post('http://localhost:5000/register', form, {
+      const response = await this.http.axiosRef.post('http://127.0.0.1:5001/register', form, {
         headers: form.getHeaders(),
       });
   
@@ -52,7 +52,7 @@ export class FaceRecognitionService {
         });
         console.log('Saved in Prisma:', saved);
 
-        await fetch('http://localhost:5000/reload-faces');
+        await fetch('http://127.0.0.1:5001/reload-faces');
         console.log('Reloaded faces in Flask');
 
         return saved;
@@ -77,7 +77,7 @@ export class FaceRecognitionService {
       contentType: file.mimetype,
     });
 
-    const response = await this.http.axiosRef.post('http://localhost:5000/recognize', form, {
+    const response = await this.http.axiosRef.post('http://127.0.0.1:5001/recognize', form, {
       headers: form.getHeaders(),
     });
 

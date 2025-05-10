@@ -1,9 +1,9 @@
-import { Controller, Post, Get, UseInterceptors, UploadedFile, UseGuards, Body } from '@nestjs/common';
+import { Controller, Post, Get, UseInterceptors, UploadedFile, Req, UseGuards } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FaceRecognitionService } from './face-recognition.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { CurrentUser } from './current-user.decorator';
 import { PrismaService } from '../prisma/prisma.service';
+import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('face')
 export class FaceRecognitionController {
@@ -12,11 +12,27 @@ export class FaceRecognitionController {
   ) {}
 
   @Post('register')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+  schema: {
+    type: 'object',
+    properties: {
+      image: {
+        type: 'string',
+        format: 'binary', // Specify that this is a file upload
+      },
+    },
+  },
+})
   async register(
     @UploadedFile() file: Express.Multer.File,
-    @Body('user_id') userId: string,
+    @Req() req
   ) {
+    const userId = req.user.userId;
+    console.log('User ID:', userId); // Log the user ID for debugging
     const imageUri = `faces/${userId}.jpg`;  // Adjust this if needed
     return this.faceService.registerFace(file, parseInt(userId), imageUri);
   }

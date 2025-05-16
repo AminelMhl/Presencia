@@ -362,10 +362,9 @@ function createPortalEffect(destination) {
         }
     `;
     document.head.appendChild(style);
-
-    setTimeout(() => {
-        window.location.href = destination;
-    }, 2000);
+    
+    window.location.href = destination;
+    
 }
 
 function showSystemMessage(message, type) {

@@ -1,14 +1,3 @@
-// ====================== USER DATABASE ======================
-let userDatabase = JSON.parse(localStorage.getItem('userDatabase')) || [
-    // Default admin account
-    {
-        name: "Shadow Monarch",
-        email: "admin@presencia.com",
-        password: "admin123",
-        isAdmin: false //Changed from true to false to be able to test camera for non-admin users until the authentication flow is set in the frontend
-    }
-];
-
 // ====================== INITIALIZATION ======================
 document.addEventListener('DOMContentLoaded', function() {
     // Check if we're on login page
@@ -34,7 +23,7 @@ function setupLoginPage() {
 
     loginForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         // Validate inputs
         if (!loginEmail.value || !loginPassword.value) {
             showSystemMessage('Please fill in all fields', 'error');
@@ -53,52 +42,44 @@ function setupRegisterPage() {
     const registerEmail = document.getElementById('registerEmail');
     const registerPassword = document.getElementById('registerPassword');
 
-    registerForm.addEventListener('submit', function(e) {
+    registerForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         // Validate inputs
         if (!registerName.value || !registerEmail.value || !registerPassword.value) {
             showSystemMessage('Please fill in all fields', 'error');
             return;
         }
 
-        // Check if user already exists
-        if (userDatabase.some(user => user.email === registerEmail.value)) {
-            showSystemMessage('User already exists', 'error');
-            return;
+        try {
+            const response = await fetch('http://localhost:3000/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: registerName.value,
+                    email: registerEmail.value,
+                    password: registerPassword.value
+                })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                showSystemMessage('Registration successful! Please check your email for verification.', 'success');
+                setTimeout(() => {
+                    createPortalEffect('login.html');
+                }, 1500);
+            } else {
+                showSystemMessage(data.message || 'Registration failed', 'error');
+            }
+        } catch (err) {
+            showSystemMessage('Registration error', 'error');
         }
-
-        // Create new user
-        const newUser = {
-            name: registerName.value,
-            email: registerEmail.value,
-            password: registerPassword.value,
-            isAdmin: false
-        };
-
-        // Add to database
-        userDatabase.push(newUser);
-        localStorage.setItem('userDatabase', JSON.stringify(userDatabase));
-
-        // Store session and redirect
-        sessionStorage.setItem('currentUser', JSON.stringify({
-            name: newUser.name,
-            email: newUser.email,
-            isAdmin: newUser.isAdmin,
-            lastLogin: new Date().toISOString()
-        }));
-
-        showSystemMessage('Registration successful!', 'success');
-        setTimeout(() => {
-            createPortalEffect('index.html');
-        }, 1500);
     });
 }
 
 // ====================== AUTHENTICATION ======================
-function authenticateUser(email, password) {
+async function authenticateUser(email, password) {
     const loginBtn = document.querySelector('#loginForm button');
-    
+
     // Show loading state
     loginBtn.disabled = true;
     loginBtn.innerHTML = '<div class="spinner"></div> SYSTEM PROCESSING';
@@ -123,51 +104,44 @@ function authenticateUser(email, password) {
     `;
     document.head.appendChild(style);
 
-    // Simulate server delay
-    setTimeout(() => {
-        const user = userDatabase.find(u => u.email === email && u.password === password);
-        
-        if (user) {
-            // Store user session
-            sessionStorage.setItem('currentUser', JSON.stringify({
-                name: user.name,
-                email: user.email,
-                isAdmin: user.isAdmin,
-                lastLogin: new Date().toISOString()
-            }));
-            sessionStorage.setItem('access_token', 'simulated_token'); // For demo purposes
-
-            showSystemMessage(`Welcome back, ${user.name}`, 'success');
+    try {
+        const response = await fetch('http://localhost:3000/auth/signin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await response.json();
+        if (response.ok) {
+            // Store tokens and user info as needed
+            sessionStorage.setItem('access_token', data.access_token);
+            sessionStorage.setItem('refresh_token', data.refresh_token);
+            // Optionally fetch user profile here and store it
+            showSystemMessage('Welcome!', 'success');
             createPortalEffect('index.html');
         } else {
-            showSystemMessage('Invalid credentials', 'error');
+            showSystemMessage(data.message || 'Invalid credentials', 'error');
             loginBtn.disabled = false;
             loginBtn.textContent = 'Login';
         }
-
-        // Remove spinner styles
+    } catch (err) {
+        showSystemMessage('Login error', 'error');
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Login';
+    } finally {
         style.remove();
-    }, 1500);
+    }
 }
 
 // ====================== DASHBOARD ======================
 function checkAuth() {
-    const currentUser = sessionStorage.getItem('currentUser');
-    
-    if (!currentUser) {
-        showSystemMessage('Please login first', 'error');
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 1500);
-        return;
+    const accessToken = sessionStorage.getItem('access_token');
+        if (!accessToken) {
+            showSystemMessage('Please login first', 'error');
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 500);
+            return;
     }
-
-    // Show admin elements if user is admin
-    const user = JSON.parse(currentUser);
-    const adminElements = document.querySelectorAll('.admin-only');
-    adminElements.forEach(el => {
-        el.style.display = user.isAdmin ? 'block' : 'none';
-    });
 }
 
 function setupDashboard() {
@@ -177,53 +151,40 @@ function setupDashboard() {
         logoutBtn.addEventListener('click', logout);
     }
 
-    // Get current user
-    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-    
     // Always setup camera (for testing)
     setupCamera();
-    // Setup camera for non-admin users
-    if (!currentUser.isAdmin) {
-        setupCamera();
-    } else {
-        // Admin gets the simulation button
-        const simulateBtn = document.querySelector('.camera-section button');
-        if (simulateBtn) {
-            simulateBtn.addEventListener('click', simulateCheckIn);
-        }
-    }
 
     // Fetch and display users in the dashboard
-fetch('http://localhost:3000/face/users')
-    .then(res => {
-        console.log('Fetch response:', res);
-        return res.json();
+    const accessToken = sessionStorage.getItem('access_token');
+    fetch('http://localhost:3000/face/users', {
+        headers: {
+            'Authorization': `Bearer ${accessToken}`
+        }
     })
-    .then(data => {
-        console.log(data);
-        const attendanceList = document.getElementById('attendanceList');
-        if (!attendanceList) return;
+        .then(res => res.json())
+        .then(data => {
+            const attendanceList = document.getElementById('attendanceList');
+            if (!attendanceList) return;
 
-        attendanceList.innerHTML = ''; // Clear any existing entries
+            attendanceList.innerHTML = ''; // Clear any existing entries
 
-        data.forEach(user => {
-            const userItem = document.createElement('li');
-            userItem.setAttribute('data-user-id', user.id);  // Store user ID for easy reference
+            data.forEach(user => {
+                const userItem = document.createElement('li');
+                userItem.setAttribute('data-user-id', user.id);  // Store user ID for easy reference
 
-            userItem.innerHTML = `
-                <span class="name">${user.name}</span>
-                <span class="status">✗</span> <!-- Initially marked as '✗' (not present) -->
-                <span class="time"></span> <!-- Empty time, will be filled after recognition -->
-                <span class="confidence"></span> <!-- Empty confidence, will be filled after recognition -->
-            `;
+                userItem.innerHTML = `
+                    <span class="name">${user.name}</span>
+                    <span class="status">✗</span>
+                    <span class="time"></span>
+                    <span class="confidence"></span>
+                `;
 
-            attendanceList.appendChild(userItem);
+                attendanceList.appendChild(userItem);
+            });
+        })
+        .catch(err => {
+            console.error("Failed to fetch users:", err);
         });
-    })
-    .catch(err => {
-        console.error("Failed to fetch users:", err);
-    });
-
 }
 
 // ====================== REAL-TIME FACE RECOGNITION ======================
@@ -250,7 +211,7 @@ function setupCamera() {
     const ctx = canvas.getContext('2d');
     const resultDiv = cameraSection.querySelector('.recognition-result');
     const startBtn = cameraSection.querySelector('#startRecognition');
-    
+
     // Set canvas size
     video.addEventListener('loadedmetadata', () => {
         canvas.width = video.videoWidth;
@@ -259,14 +220,9 @@ function setupCamera() {
     // Start camera
     navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => {
-            console.log("Camera access granted");
             video.srcObject = stream;
-            video.onloadedmetadata = () => {
-                console.log(`Video ready: ${video.videoWidth}x${video.videoHeight}`);
-            };
         })
         .catch(err => {
-            console.error("Camera error:", err);
             cameraSection.innerHTML += `
                 <p class="error">Camera Error: ${err.message}</p>
                 <p>Make sure you've granted camera permissions</p>
@@ -276,7 +232,7 @@ function setupCamera() {
     let isRecognizing = false;
     let interval;
 
-        startBtn.addEventListener('click', () => {
+    startBtn.addEventListener('click', () => {
         if (isRecognizing) {
             clearInterval(interval);
             startBtn.textContent = 'Start Recognition';
@@ -290,10 +246,13 @@ function setupCamera() {
                 canvas.toBlob(async (blob) => {
                     const formData = new FormData();
                     formData.append('image', blob, 'frame.jpg');
-                    
+                    const accessToken = sessionStorage.getItem('access_token');
                     try {
                         const response = await fetch('http://localhost:3000/face/recognize', {
                             method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${accessToken}`
+                            },
                             body: formData
                         });
 
@@ -313,9 +272,9 @@ function setupCamera() {
                                 const confidenceSpan = userItem.querySelector('.confidence');
 
                                 // Update the status to '✓', time, and confidence
-                                statusSpan.textContent = '✓';  // Mark as present
-                                timeSpan.textContent = `⏱️ ${data.attendance.formattedDateTime}`;  // Display time
-                                confidenceSpan.textContent = `🔒 Confidence: ${Math.round(100 - data.confidence)}%`;  // Display confidence
+                                statusSpan.textContent = '✓';
+                                timeSpan.textContent = `⏱️ ${data.attendance.formattedDateTime}`;
+                                confidenceSpan.textContent = `🔒 Confidence: ${Math.round(100 - data.confidence)}%`;
                             }
                         } else {
                             resultDiv.innerHTML = `<p class="error">❌ ${data.error || 'Recognition failed'}</p>`;
@@ -330,34 +289,9 @@ function setupCamera() {
     });
 }
 
-function simulateCheckIn() {
-    const attendanceList = document.getElementById('attendanceList');
-    const uncheckedItems = Array.from(attendanceList.children)
-        .filter(item => !item.querySelector('.status').classList.contains('checked'));
-
-    if (uncheckedItems.length > 0) {
-        const randomIndex = Math.floor(Math.random() * uncheckedItems.length);
-        const userItem = uncheckedItems[randomIndex];
-        const status = userItem.querySelector('.status');
-        
-        // Animate check-in
-        status.textContent = '...';
-        status.style.color = '#4361ee';
-
-        setTimeout(() => {
-            status.textContent = '✓';
-            status.classList.add('checked');
-            status.style.color = '#4cc9f0';
-            showSystemMessage('Check-in confirmed', 'success');
-        }, 500);
-    } else {
-        showSystemMessage('All users checked in', 'success');
-    }
-}
-
 function logout() {
-    sessionStorage.removeItem('currentUser');
     sessionStorage.removeItem('access_token');
+    sessionStorage.removeItem('refresh_token');
     createPortalEffect('login.html');
 }
 
@@ -428,17 +362,16 @@ function createPortalEffect(destination) {
         }
     `;
     document.head.appendChild(style);
-
-    setTimeout(() => {
-        window.location.href = destination;
-    }, 2000);
+    
+    window.location.href = destination;
+    
 }
 
 function showSystemMessage(message, type) {
     const messageBox = document.createElement('div');
     messageBox.className = `system-message ${type}`;
     messageBox.textContent = message;
-    
+
     // Add styles
     const style = document.createElement('style');
     style.textContent = `
@@ -477,9 +410,9 @@ function showSystemMessage(message, type) {
         }
     `;
     document.head.appendChild(style);
-    
+
     document.body.appendChild(messageBox);
-    
+
     // Remove after animation
     setTimeout(() => {
         messageBox.remove();

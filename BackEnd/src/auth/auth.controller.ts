@@ -6,11 +6,12 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { PrismaService } from '../prisma/prisma.service';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService, private readonly jwtService: JwtService, private readonly configService: ConfigService) { }
+  constructor(private readonly authService: AuthService, private readonly jwtService: JwtService, private readonly configService: ConfigService, private readonly prisma: PrismaService) { }
 
   @Post('signup')
   @ApiOperation({ summary: 'Sign up a new user' })
@@ -52,5 +53,15 @@ export class AuthController {
   @ApiExcludeEndpoint()
   async verifyEmail(@Query('token') token: string) {
     return this.authService.verifyEmail(token);
+  }
+
+    @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async getMe(@Req() req) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { id: true, name: true, email: true, role: true},
+    });
+    return user;
   }
 }

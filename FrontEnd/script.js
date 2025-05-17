@@ -8,10 +8,31 @@ document.addEventListener('DOMContentLoaded', function() {
     else if (document.getElementById('registerForm')) {
         setupRegisterPage();
     }
-    // Check if we're on dashboard
-    else if (document.querySelector('.dashboard')) {
+    // Check if we're on profile page
+    if (document.querySelector('.profile-page')) {
         checkAuth();
+        setupProfileSection();
+    }
+    // Check if we're on dashboard
+    if (document.querySelector('.dashboard')) {
+        checkAuth();
+        const userRole = sessionStorage.getItem('user_role');
+        if (userRole !== 'ADMIN') {
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+            showSystemMessage('Access denied: Admins only', 'error');
+            window.location.href = 'profile.html';
+            return;
+        }
         setupDashboard();
+    }
+
+    if (document.querySelector('.profile-page')) {
+        checkAuth();
+        const userRole = sessionStorage.getItem('user_role');
+        if (userRole !== 'ADMIN') {
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+            return;
+        }
     }
 });
 
@@ -115,6 +136,11 @@ async function authenticateUser(email, password) {
             // Store tokens and user info as needed
             sessionStorage.setItem('access_token', data.access_token);
             sessionStorage.setItem('refresh_token', data.refresh_token);
+
+            // Decode JWT to get user role
+            const payload = JSON.parse(atob(data.access_token.split('.')[1]));
+            sessionStorage.setItem('user_role', payload.role); // or payload.isAdmin
+
             // Optionally fetch user profile here and store it
             showSystemMessage('Welcome!', 'success');
             createPortalEffect('index.html');
@@ -418,4 +444,72 @@ function showSystemMessage(message, type) {
         messageBox.remove();
         style.remove();
     }, 3000);
+}
+
+// ====================== PROFILE SECTION ======================
+function setupProfileSection() {
+    const accessToken = sessionStorage.getItem('access_token');
+    fetch('http://localhost:3000/auth/me', {
+        headers: {
+            'Authorization': `Bearer ${accessToken}`
+        }
+    })
+    .then(res => res.json())
+    .then(user => {
+        document.getElementById('profileName').textContent = user.name;
+        document.getElementById('profileEmail').textContent = user.email;
+        const profilePhoto = document.getElementById('profilePhoto');
+        const faceUploadForm = document.getElementById('faceUploadForm');
+        const photoUrl = `http://localhost:3000/faces/${user.id}.jpg`;
+        // Check if the photo exists before showing
+        fetch(photoUrl, { method: 'HEAD' })
+            .then(res => {
+                if (res.ok) {
+                    profilePhoto.src = photoUrl;
+                    profilePhoto.style.display = 'block';
+                    faceUploadForm.style.display = 'none'; // Hide upload form if photo exists
+                } else {
+                    profilePhoto.style.display = 'none';
+                    faceUploadForm.style.display = 'block'; // Show upload form if no photo
+                }
+            });
+    })
+    .catch(() => {
+        document.getElementById('profileName').textContent = 'Error';
+        document.getElementById('profileEmail').textContent = 'Error';
+    });
+
+    const faceUploadForm = document.getElementById('faceUploadForm');
+    const facePhoto = document.getElementById('facePhoto');
+    const faceUploadStatus = document.getElementById('faceUploadStatus');
+
+    faceUploadForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (!facePhoto.files[0]) {
+            faceUploadStatus.textContent = 'Please select a photo.';
+            return;
+        }
+        const formData = new FormData();
+        formData.append('image', facePhoto.files[0]);
+        faceUploadStatus.textContent = 'Uploading...';
+
+        try {
+            const response = await fetch('http://localhost:3000/face/register', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                },
+                body: formData
+            });
+            const data = await response.json();
+            if (response.ok) {
+                faceUploadStatus.textContent = 'Face registered successfully!';
+                setupProfileSection(); // <--- Add this line
+            } else {
+                faceUploadStatus.textContent = data.message || 'Registration failed.';
+            }
+        } catch (err) {
+            faceUploadStatus.textContent = 'Error uploading photo.';
+        }
+    });
 }

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Presencia - Profile</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Presencia</h1>
+    <p class="slogan">Show your face, take your place</p>
+  </header>
+
+  <nav class="navbar">
+    <a href="index.html" class="nav-item admin-only">Dashboard</a>
+    <a href="profile.html" class="nav-item">Profile</a>
+    <a href="#" class="nav-item" onclick="logout()">Logout</a>
+  </nav>
+
+  <main class="profile-page">
+    <section class="profile-section">
+      <h2>Profile</h2>
+      <div class="profile-info">
+        <img id="profilePhoto" src="" alt="Profile Photo" style="width:120px;height:120px;border-radius:50%;object-fit:cover;display:none;">        <div>
+        <p><strong>Name:</strong> <span id="profileName">Loading...</span></p>
+        <p><strong>Email:</strong> <span id="profileEmail">Loading...</span></p>
+  </div>
+</div>
+      <form id="faceUploadForm">
+        <label for="facePhoto">Upload your photo for face registration:</label><br>
+        <input type="file" id="facePhoto" accept="image/*" required />
+        <button type="submit" class="btn-primary">Register Face</button>
+      </form>
+      <div id="faceUploadStatus"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Presencia. All rights reserved.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,6 +1,8 @@
 # Presencia: Face Recognition App
 
-![Presencia.jpg](Presencia.jpg)
+<p align="center">
+<img src="Presencia.jpg" alt="drawing" width="200"/>
+</p>
 
 Presencia is a full-stack attendance management system that leverages facial recognition technology to streamline and secure the process of tracking attendance. Built with a modern tech stack, it offers a seamless experience for both administrators and users.
 
@@ -137,6 +139,15 @@ Presencia/
     - Facilitates fine-grained permission management.
     - Scales efficiently with the addition of new roles and permissions.
     - Enhances security by restricting access based on user roles.
+  
+# Contributors
+
+We extend our heartfelt gratitude to the following individuals who have contributed to the development and success of the Presencia project:
+
+- **[Mohamed Amine Solana](https://github.com/AminelMhl)** 
+- **[Rayen Laabidi](https://github.com/laabidiRayen)** 
+- **[Achref Msekni](https://github.com/achref-msekni)** 
+- **[Aya Saadawi](https://github.com/AyaSaadawi)** 
 
 ## 📄 License
 
